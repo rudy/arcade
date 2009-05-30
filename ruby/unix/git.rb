@@ -20,23 +20,6 @@ routines do
     end
   end
   
-end
-
-
-__END__
-
-## COPY PRIVATE KEY
-if @pkey
-  # Try when debugging: ssh -vi path/2/pkey git@github.com
-  key = File.basename(@pkey)
-  homedir = rbox.getenv['HOME']
-  rbox.mkdir(:p, :m, '700', '.ssh') rescue nil # :p says keep quiet if it exists              
-  if rbox.file_exists?(".ssh/#{key}")
-    puts "  Remote private key #{key} already exists".colour(:red)
-  else
-    rbox.upload(@pkey, ".ssh/#{key}")
-  end
-  
   ## NOTE: The following are two attempts at telling git which 
   ## private key to use. Both fail. The only thing I could get
   ## to work is modifying the ~/.ssh/config file. 
@@ -51,45 +34,54 @@ if @pkey
   ## export GIT_SSL_KEY=/home/delano/.ssh/id_rsa
   ## rbox.setenv("GIT_SSL_KEY", "#{homedir}/.ssh/#{key}")
   
-  if rbox.file_exists?('.ssh/config')
-    rbox.cp('.ssh/config', ".ssh/config-previous")
-    ssh_config = rbox.download('.ssh/config')
+  ## NOT COMPLETE
+  ##upload_private_key do 
+  ##  before_local :delano do
+  ##    homedir = guess_user_home
+  ##    unless file_exists?("#{homedir}/.ssh/git-delano_rsa")
+  ##      mkdir("#{homedir}/.ssh") unless file_exists?("#{homedir}/.ssh")
+  ##      upload("#{ENV['HOME']}/.ssh/git-delano_rsa", "#{homedir}/.ssh/")
+  ##      chmod('0600', "#{homedir}/.ssh/git-delano_rsa")
+  ##    end
+  ##    
+  ##    file_append("#{ENV['HOME']}/.ssh/config", "IdentityFile #{homedir}/.ssh/#{key}")
+  ##    chmod('0600', "#{homedir}/.ssh/config")
+  ##  end
+  ##end
+  
+  # rel-2009-03-05-user-rev
+  # rel-2009-03-05-delano-01
+  find_next_rtag do 
+    before_local do
+      now = Time.now
+      mon = now.mon.to_s.rjust(2, '0')
+      day = now.day.to_s.rjust(2, '0')
+      rev = "01"
+      criteria = ['rel', now.year, mon, day, rev]
+      criteria.insert(-2, user) 
+      tag = criteria.join(Rudy::DELIM)
+      while git('tag', :l, tag).stdout.to_s == tag && rev.to_i < 50
+        rev.succ!
+        tag = criteria.join(Rudy::DELIM)
+      end
+      echo criteria.join(Rudy::DELIM)
+    end
   end
   
-  ssh_config ||= StringIO.new
-  ssh_config.puts $/, "IdentityFile #{homedir}/.ssh/#{key}"
-  puts "  Adding IdentityFile #{key} to #{homedir}/.ssh/config"
   
-  rbox.upload(ssh_config, '.ssh/config')
-  rbox.chmod('0600', '.ssh/config')
-  
+  delete_tag do
+    before_local do |option, argv|
+      git 'tag', :d, argv.first
+      git 'push', 'origin', argv.first
+    end
+  end
+
+
 end
 
 
+__END__
 
-## CREATE TAGS
-# rel-2009-03-05-user-rev
-def find_next_rtag(username=nil)
-  now = Time.now
-  mon = now.mon.to_s.rjust(2, '0')
-  day = now.day.to_s.rjust(2, '0')
-  rev = "01"
-  criteria = ['rel', now.year, mon, day, rev]
-  criteria.insert(-2, username) if username
-  rev.succ! while valid_rtag?(criteria.join(Rudy::DELIM)) && rev.to_i < 50
-  raise TooManyTags if rev.to_i >= 50
-  criteria.join(Rudy::DELIM)
-end
-
-def delete_rtag(rtag=nil)
-  rtag ||= @rtag
-  ret = trap_rbox_errors { Rye.shell(:git, 'tag', :d, rtag) }
-  raise ret.stderr.join($/) if ret.exit_code > 0 # TODO: retest
-  # Equivalent to: "git push origin :tag-name" which deletes a remote tag
-  ret = trap_rbox_errors { Rye.shell(:git, "push #{@remote} :#{rtag}") } if @remote
-  raise ret.stderr.join($/) if ret.exit_code > 0
-  true
-end
 
 
 ## REMOTE CHECKOUT
@@ -138,10 +130,8 @@ def valid_rtag?(tag)
   # git tag -l tagname returns a 0 exit code and stdout is empty
   # when a tag does not exit. When it does exist, the exit code
   # is 0 and stdout contains the tagname. 
-  ret = Rye.shell(:git, 'tag', :l, tag)  
-  # change :l to :d for quick deleting above and return true
-  # OR: just change to :d to always recreate the same tag
-  (ret.exit_code == 0 && ret.stdout.to_s == tag)
+  ret = git('tag', :l, tag).stdout.to_s
+  (ret.exit_code == 0 && ret == tag)
 end
 
 
