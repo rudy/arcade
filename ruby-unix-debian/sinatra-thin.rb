@@ -1,25 +1,10 @@
 
-commands do
-  allow :thin, "/usr/local/bin/thin", :d, :R, './config.ru', :l, './thin.log', :P, './thin.pid'
-end
 
 routines do
   
-  sysupdate do
-    script :root do           
-      uname :a       
-      apt_get "update"               
-      apt_get "install", "build-essential", "git-core"
-      apt_get "install", "sqlite3", "libsqlite3-dev"
-      apt_get "install", "ruby1.8-dev", "rubygems"
-      apt_get "install", "apache2-prefork-dev", "libapr1-dev"
-      apt_get "install", "libfcgi-dev", "libfcgi-ruby1.8"
-      gem_sources :a, "http://gems.github.com"
-    end
-  end
-  
-  installdeps do
+  install do
     script :root do
+      apt_get "install", "apache2-prefork-dev", "libapr1-dev"
       gem_install "test-spec", "rspec", "camping", "fcgi", "memcache-client"
       gem_install "mongrel"
       gem_install 'ruby-openid', :v, "2.0.4" # thin requires 2.0.x

@@ -2,7 +2,6 @@
 commands do
   allow :passenger_install_apache2, "passenger-install-apache2-module", '--auto'
   allow :passenger_install_nginx, "passenger-install-nginx-module", '--auto', '--autodownload'
-  allow :apache2ctl
 end
 
 routines do
