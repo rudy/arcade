@@ -26,7 +26,6 @@ end
 __END__
 
 ## COPY PRIVATE KEY
-
 if @pkey
   # Try when debugging: ssh -vi path/2/pkey git@github.com
   key = File.basename(@pkey)
@@ -65,5 +64,85 @@ if @pkey
   rbox.chmod('0600', '.ssh/config')
   
 end
+
+
+
+## CREATE TAGS
+# rel-2009-03-05-user-rev
+def find_next_rtag(username=nil)
+  now = Time.now
+  mon = now.mon.to_s.rjust(2, '0')
+  day = now.day.to_s.rjust(2, '0')
+  rev = "01"
+  criteria = ['rel', now.year, mon, day, rev]
+  criteria.insert(-2, username) if username
+  rev.succ! while valid_rtag?(criteria.join(Rudy::DELIM)) && rev.to_i < 50
+  raise TooManyTags if rev.to_i >= 50
+  criteria.join(Rudy::DELIM)
+end
+
+def delete_rtag(rtag=nil)
+  rtag ||= @rtag
+  ret = trap_rbox_errors { Rye.shell(:git, 'tag', :d, rtag) }
+  raise ret.stderr.join($/) if ret.exit_code > 0 # TODO: retest
+  # Equivalent to: "git push origin :tag-name" which deletes a remote tag
+  ret = trap_rbox_errors { Rye.shell(:git, "push #{@remote} :#{rtag}") } if @remote
+  raise ret.stderr.join($/) if ret.exit_code > 0
+  true
+end
+
+
+## REMOTE CHECKOUT
+# We need to add the host keys to the user's known_hosts file
+# to prevent the git commands from failing when it raises the
+# "Host key verification failed." messsage.
+if rbox.file_exists?('.ssh/known_hosts')
+  rbox.cp('.ssh/known_hosts', ".ssh/known_hosts-previous")
+  known_hosts = rbox.download('.ssh/known_hosts')
+end
+known_hosts ||= StringIO.new
+remote = get_remote_uri
+host = URI.parse(remote).host rescue nil
+host ||= remote.scan(/\A.+?@(.+?)\:/).flatten.first
+known_hosts.puts $/, Rye.remote_host_keys(host)
+puts "  Adding host key for #{host} to .ssh/known_hosts"
+
+rbox.upload(known_hosts, '.ssh/known_hosts')
+rbox.chmod('0600', '.ssh/known_hosts')
+
+trap_rbox_errors {
+  rbox.git('clone', get_remote_uri, @path)
+}
+rbox.cd(@path)
+trap_rbox_errors {
+  rbox.git('checkout', :b, @rtag)
+}
+
+
+
+## SUPPORT METHODS
+def get_remote_uri
+  ret = Rye.shell(:git, "config", "remote.#{@remote}.url")
+  ret.stdout.first
+end
+
+# Check if the given remote is valid. 
+#def has_remote?(remote)
+#  success = false
+#  (@repo.remotes || []).each do |r|
+#  end
+#  success
+#end
+
+def valid_rtag?(tag)
+  # git tag -l tagname returns a 0 exit code and stdout is empty
+  # when a tag does not exit. When it does exist, the exit code
+  # is 0 and stdout contains the tagname. 
+  ret = Rye.shell(:git, 'tag', :l, tag)  
+  # change :l to :d for quick deleting above and return true
+  # OR: just change to :d to always recreate the same tag
+  (ret.exit_code == 0 && ret.stdout.to_s == tag)
+end
+
 
 
