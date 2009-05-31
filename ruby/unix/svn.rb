@@ -1,9 +1,23 @@
+## ruby-unix
+## Subversion routines
 
+## NOTE: I could use help implementing these routines for Subversion!
+##       See __END__ for some suggestions. 
+
+routines do
+  
+  tag do |option, argv|
+  end  
+  
+  delate_tag do |option, argv|
+  end
+  
+end
 
 
 __END__
 
-## TO BE IMPLEMENTED
+## TO BE IMPLEMENTED (take from old Rudy codes)
 
 def create_release(username=nil, msg=nil)
   local_uri, local_revision = local_info

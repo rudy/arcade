@@ -13,18 +13,13 @@ routines do
       @tagname = Time.now.strftime("%Y-%m-%d-#{user}-#{suffix}")
       git 'tag', :a, @tagname, :m, msg
     end
-    after_local do
-      # The instance variable set in the previous local block is 
-      # available here, but not in remote blocks (and vice versa)
-      echo "Created tag: #{@tagname}"
-    end
   end
   
   ## NOTE: The following are two attempts at telling git which 
   ## private key to use. Both fail. The only thing I could get
   ## to work is modifying the ~/.ssh/config file. 
   ##
-  ## This runs fine, but "git clone" doesn't care. 
+  ## This runs fine, but "git clone" still doesn't recognize it
   ## git config --global --replace-all http.sslKey /home/delano/.ssh/id_rsa
   ## rbox.git('config', '--global', '--replace-all', 'http.sslKey', "#{homedir}/.ssh/#{key}")
   ##
@@ -51,19 +46,17 @@ routines do
   
   # rel-2009-03-05-user-rev
   # rel-2009-03-05-delano-01
-  find_next_rtag do 
+  rtag do 
     before_local do
       now = Time.now
-      mon = now.mon.to_s.rjust(2, '0')
-      day = now.day.to_s.rjust(2, '0')
+      mon, day = now.mon.to_s.rjust(2, '0'), now.day.to_s.rjust(2, '0')
       rev = "01"
-      criteria = ['rel', now.year, mon, day, rev]
-      criteria.insert(-2, user) 
+      criteria = ['rel', now.year, mon, day, user, rev]
       tag = criteria.join(Rudy::DELIM)
       while git('tag', :l, tag).stdout.to_s == tag && rev.to_i < 50
         rev.succ!
-        tag = criteria.join(Rudy::DELIM)
       end
+      tag = criteria.join(Rudy::DELIM)
       echo criteria.join(Rudy::DELIM)
     end
   end
