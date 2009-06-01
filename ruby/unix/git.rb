@@ -15,6 +15,33 @@ routines do
     end
   end
   
+  # rel-2009-03-05-user-rev
+  # rel-2009-03-05-delano-01
+  rtag do 
+    before_local do |option, argv|
+      msg, suffix = option.message, argv.shift
+      msg ||= 'Another release by Rudy'
+      now = Time.now
+      mon, day = now.mon.to_s.rjust(2, '0'), now.day.to_s.rjust(2, '0')
+      rev = "01"
+      criteria = ['rel', now.year, mon, day, user, rev]
+      tag = criteria.join(Rudy::DELIM)
+      while git('tag', :l, tag).stdout.to_s == tag && rev.to_i < 50
+        rev.succ!
+        tag = criteria.join(Rudy::DELIM)
+      end
+      tag = [tag, suffix].join(Rudy::DELIM) if suffix
+      git 'tag', :a, tag, :m, msg
+    end
+  end
+  
+  delete_tag do
+    before_local do |option, argv|
+      git 'tag', :d, argv.first
+      git 'push', 'origin', argv.first
+    end
+  end
+  
   ## NOTE: The following are two attempts at telling git which 
   ## private key to use. Both fail. The only thing I could get
   ## to work is modifying the ~/.ssh/config file. 
@@ -44,32 +71,7 @@ routines do
   ##  end
   ##end
   
-  # rel-2009-03-05-user-rev
-  # rel-2009-03-05-delano-01
-  rtag do 
-    before_local do
-      now = Time.now
-      mon, day = now.mon.to_s.rjust(2, '0'), now.day.to_s.rjust(2, '0')
-      rev = "01"
-      criteria = ['rel', now.year, mon, day, user, rev]
-      tag = criteria.join(Rudy::DELIM)
-      while git('tag', :l, tag).stdout.to_s == tag && rev.to_i < 50
-        rev.succ!
-      end
-      tag = criteria.join(Rudy::DELIM)
-      echo criteria.join(Rudy::DELIM)
-    end
-  end
   
-  
-  delete_tag do
-    before_local do |option, argv|
-      git 'tag', :d, argv.first
-      git 'push', 'origin', argv.first
-    end
-  end
-
-
 end
 
 
