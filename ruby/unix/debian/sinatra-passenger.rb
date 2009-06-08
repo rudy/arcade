@@ -5,6 +5,7 @@ commands do
   allow :passenger_install_apache2, "passenger-install-apache2-module", '--auto'
   allow :passenger_install_nginx, "passenger-install-nginx-module", '--auto', '--autodownload'
   allow :apache2ctl
+  allow :update_rubygems
 end
 
 
@@ -20,6 +21,8 @@ routines do
       apt_get "install", "apache2-mpm-prefork", "apache2-prefork-dev", "libapr1-dev"
       apt_get "install", "libfcgi-dev", "libfcgi-ruby1.8"
       gem_sources :a, "http://gems.github.com"
+      gem_install 'rubygems-update'
+      update_rubygems
     end
   end
   
