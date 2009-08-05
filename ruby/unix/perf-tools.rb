@@ -1,7 +1,7 @@
 
 commands do
   allow :rm
-  allow :wget  
+  allow :wget, 'wget', :q 
 end
 
 routines do
