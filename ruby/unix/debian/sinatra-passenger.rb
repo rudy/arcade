@@ -12,7 +12,7 @@ end
 routines do
   
   sysupdate do
-    script :root do                  
+    remote :root do                  
       apt_get "update"               
       apt_get "install", "build-essential", "git-core"
       apt_get "install", "sqlite3", "libsqlite3-dev"
@@ -27,7 +27,7 @@ routines do
   end
   
   installdeps do
-    script :root do
+    remote :root do
       gem_install "test-spec", "rspec", "camping", "fcgi", "memcache-client"
       gem_install "rake", "passenger"
       passenger_install_apache2

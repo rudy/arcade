@@ -24,10 +24,10 @@ routines do
       setenv 'EC2_HOME', '/usr/local/ec2'
       setenv 'RUBYLIB', '/usr/lib/site_ruby'
       
-      pkeyfile = File.basename $global.privatekey
+      pkeyfile = File.basename $global.pkey
       certfile = File.basename $global.cert
       
-      file_upload $global.privatekey, $global.cert, "/mnt/"
+      file_upload $global.pkey, $global.cert, "/mnt/"
       touch "/root/firstrun"
       
       # TODO: make i386 configurable

@@ -6,7 +6,7 @@ end
 routines do
   
   tag do
-    before_local do |option, argv|
+    local do |option, argv|
       msg, suffix = option.message, argv.shift
       msg ||= 'Another release by Rudy'
       suffix ||= git 'rev-parse', '--short', 'HEAD'
@@ -18,7 +18,7 @@ routines do
   # rel-2009-03-05-user-rev
   # rel-2009-03-05-delano-01
   rtag do 
-    before_local do |option, argv|
+    local do |option, argv|
       msg, suffix = option.message, argv.shift
       msg ||= 'Another release by Rudy'
       now = Time.now
@@ -36,7 +36,7 @@ routines do
   end
   
   delete_tag do
-    before_local do |option, argv|
+    local do |option, argv|
       git 'tag', :d, argv.first
       git 'push', 'origin', argv.first
     end

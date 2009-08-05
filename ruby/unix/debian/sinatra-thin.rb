@@ -11,7 +11,7 @@ sinatra_home = "/path/2/sinatra"
 routines do
   
   sysupdate do
-    script :root do                  
+    remote :root do                  
       apt_get "update"               
       apt_get "install", "build-essential", "git-core"
       apt_get "install", "sqlite3", "libsqlite3-dev"
@@ -25,7 +25,7 @@ routines do
   end
   
   installdeps do
-    script :root do
+    remote :root do
       gem_install "test-spec", "rspec", "camping", "fcgi", "memcache-client"
       gem_install "mongrel"
       gem_install "ruby-openid", :v, "2.0.4" # thin requires 2.0.x
@@ -44,17 +44,17 @@ routines do
       end
 
       restart do
-        after :rudy do
+        remote :rudy do
           thin :c, sinatra_home, "restart"
         end
       end
       start do
-        after :rudy do
+        remote :rudy do
           thin :c, sinatra_home, "start"
         end
       end
       stop do
-        after :rudy do
+        remote :rudy do
           thin :c, sinatra_home, "stop"
         end
       end

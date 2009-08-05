@@ -4,7 +4,7 @@ commands do
 end
 
 publish do
-  script_local do
+  local do
     project = File.basename pwd.first
     puts 'Building docs...'
     rake 'rdoc'
