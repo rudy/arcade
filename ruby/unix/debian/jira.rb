@@ -1,5 +1,9 @@
 # NOTE: This configuration is in development and incomplete. 
 
+defaults do
+  color true
+end
+
 machines do
   
   region :'us-east-1' do
@@ -31,8 +35,7 @@ end
 
 routines do
   
-  
-  initial_setup do
+  restore do
     adduser :jira
     authorize :jira
     disks do
@@ -68,6 +71,11 @@ routines do
   end
   
   installjira do
+    adduser :jira
+    authorize :jira
+    disks do
+      create "/jira"
+    end
     remote :root do
       disable_safe_mode
       raise "JIRA is already installed" if file_exists? '/jira/app'
@@ -86,3 +94,4 @@ routines do
   end
   
 end
+
