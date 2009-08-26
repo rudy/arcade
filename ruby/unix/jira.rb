@@ -74,7 +74,7 @@ routines do
         disks do                     # Create a volume from the
           restore "/jira"            # most recent snapshot
         end
-        after :start
+        after :start_jira
       end  
 
       # $ rudy install
@@ -82,8 +82,12 @@ routines do
       # Run this once, to setup JIRA the first time. 
       #
       install do
+        before :startup
         adduser :jira
         authorize :jira
+        network do                   # Open access to port 8080
+          authorize 8080             # for your local machine 
+        end
         disks do
           create "/jira"
         end
@@ -103,23 +107,24 @@ routines do
           chown :R, 'jira', '/jira'
           ls :l
         end
+        after :start_jira
       end
   
       shutdown do
-        before :stop, :archive
+        before :stop_jira, :archive
         disks do 
           destroy "/jira"
         end
       end
     
-      start do
+      start_jira do
         remote :jira do
           cd '/jira/app'
           sh 'bin/startup.sh'
         end
       end
   
-      stop do
+      stop_jira do
         remote :jira do
           cd '/jira/app'
           sh 'bin/shutdown.sh'
