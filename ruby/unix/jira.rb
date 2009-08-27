@@ -98,7 +98,7 @@ routines do
           raise "JIRA is already installed" if file_exists? '/jira/app'
 
           jira_archive = "atlassian-jira-standard-3.13.5-standalone.tar.gz"
-          uri = "www.atlassian.com/software/jira/downloads/binary"
+          uri = "http://www.atlassian.com/software/jira/downloads/binary"
           wget "#{uri}/#{jira_archive}" unless file_exists? jira_archive
 
           cp jira_archive, '/jira/jira.tar.gz' 
