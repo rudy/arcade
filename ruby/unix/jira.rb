@@ -112,11 +112,12 @@ routines do
         after :start_jira
       end
   
-      shutdown do
+      destroy do
         before :stop_jira, :archive
         disks do 
           destroy "/jira"
         end
+        after :shutdown
       end
     
       start_jira do
