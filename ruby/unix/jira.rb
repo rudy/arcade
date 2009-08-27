@@ -12,6 +12,7 @@ defaults do
   environment :apps
   role :jira
   color true
+  auto false
 end
 
 
@@ -88,17 +89,18 @@ routines do
         network do                   # Open access to port 8080
           authorize 8080             # for your local machine 
         end
-        disks do
-          create "/jira"
+        disks do                     # Create an EBS volume where
+          create "/jira"             # JIRA will be installed.
         end
         remote :root do
-          disable_safe_mode          # Allow file globs and tildas
-          
+          disable_safe_mode          # Allow file globs and tildas.
+
           raise "JIRA is already installed" if file_exists? '/jira/app'
+
           jira_archive = "atlassian-jira-standard-3.13.5-standalone.tar.gz"
-          unless file_exists? jira_archive
-            wget "http://www.atlassian.com/software/jira/downloads/binary/#{jira_archive}"
-          end
+          uri = "www.atlassian.com/software/jira/downloads/binary"
+          wget "#{uri}/#{jira_archive}" unless file_exists? jira_archive
+
           cp jira_archive, '/jira/jira.tar.gz' 
           cd '/jira'
           mkdir :p, '/jira/indexes', '/jira/attachments', '/jira/backups'
@@ -135,6 +137,10 @@ routines do
         disks do
           archive "/jira"
         end
+      end
+      
+      authuser do
+        authorize :jira
       end
       
     end
