@@ -107,7 +107,7 @@ routines do
           tar :x, :f, 'jira.tar.gz'
           mv 'atlassian-jira-*', 'app'
           chown :R, 'jira', '/jira'
-          ls :l
+          ls :l 
         end
         after :start_jira
       end
