@@ -39,7 +39,8 @@ routines do
     local do
       puts 'Publishing Gemcutter gem...'
       rake "clean", "package"
-      unsafely { gem_push "pkg/*gem" }
+      gemfile = unsafely { ls "pkg/*gem" }
+      gem_push gemfile.first
     end
   end
 
