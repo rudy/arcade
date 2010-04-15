@@ -21,6 +21,14 @@ routines do
       raise "Must provide an image name" if argv[1].nil?
       raise "Must provide a bucket (-b bucket-name)" if $global.bucket.nil?
       
+      unless $global.pkey && File.exists?($global.pkey)
+        raise "No private key file. Check your config." 
+      end
+      
+      unless $global.cert && File.exists?($global.cert)
+        raise "No certificate. Check your config." 
+      end
+        
       setenv 'EC2_HOME', '/usr/local/ec2'
       setenv 'RUBYLIB', '/usr/lib/site_ruby'
       
@@ -40,6 +48,5 @@ routines do
       rudy_ec2 :z, $global.zone, 'im', :R, "#{$global.bucket}/#{argv[1]}.manifest.xml"
     end
   end
-  
-  
+    
 end
