@@ -8,12 +8,14 @@ end
 routines do
   
   publish do
-    before :package_test
-    before :publish_docs
-    local do
+    local do |argv|
+      abort "Usage: rudy publish TAG" if argv.empty?
       project = File.basename pwd.first
-      puts "PUBLISH #{project}", $/
+      puts "PUBLISH #{project} #{argv.first}", $/
+      git 'tag', argv.first
     end
+    after :package_test
+    after :publish_docs
     after :publish_github
     after :publish_gem
   end
@@ -21,7 +23,7 @@ routines do
   package_test do
     local do
       puts "Creating Test package..."
-      rake 'package'
+      rake file_exists?('VERSION.yml') ? 'build' : 'package'
       rake 'clean'
     end
   end
@@ -38,7 +40,8 @@ routines do
   publish_gem do
     local do
       puts 'Publishing Gemcutter gem...'
-      rake "clean", "package"
+      rake "clean"
+      rake file_exists?('VERSION.yml') ? 'build' : 'package'
       gemfile = unsafely { ls "pkg/*gem" }
       gem_push gemfile.first
     end
@@ -55,10 +58,6 @@ routines do
   end
   
   publish_docs do
-    before :publish_github_docs
-  end
-  
-  publish_github_docs do
     local do
       rake 'rdoc'
       if file_exists?('doc')
@@ -72,6 +71,7 @@ routines do
         
         git 'checkout', 'master'
         git 'push'
+        rake 'publish:rdoc'
       else
         puts "No docs directory"
       end
